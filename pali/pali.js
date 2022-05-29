@@ -1,98 +1,37 @@
-import { PaliString } from './palilib.js';
+import { PaliString, SCRIPT_THAI, SCRIPT_DEVANAGARI, SCRIPT_BURMESE } from './palilib.js';
 
-function parseThai() {
-  let paliText = document.getElementById('pali').value;
-  let thaiPhrases = [];
-  let phrases = paliText.split(' ');
-  let errorText = '';
+function transliterate(text, script, el) {
+  const outPhrases = [];
+  const phrases = text.split(' ');
+  const errorText = '';
   for (const p of phrases) {
     if (!p) {
       continue;
     }
     let parsed = new PaliString(p);
-    if (parsed.isValid) {
-      const thaiPhrase = parsed.toThai();
-      if (!thaiPhrase) {
-        errorText = 'Error transcribing: ' + p;
-        break;
-      }
-      thaiPhrases.push(thaiPhrase);
-    } else {
+    if (!parsed.isValid) {
       errorText = 'Error parsing: ' + p;
       break;
     }
-  }
-  if (errorText) {
-    document.getElementById('thai').innerText = errorText;
-  } else {
-    document.getElementById('thai').innerText = 'Thai: ' + thaiPhrases.join(' ');
-  }
-}
-
-function parseDevanagari() {
-  let paliText = document.getElementById('pali').value;
-  let devanagariPhrases = [];
-  let phrases = paliText.split(' ');
-  let errorText = '';
-  for (const p of phrases) {
-    if (!p) {
-      continue;
-    }
-    let parsed = new PaliString(p);
-    if (parsed.isValid) {
-      const devanagariPhrase = parsed.toDevanagari();
-      if (!devanagariPhrase) {
-        errorText = 'Error transcribing: ' + p;
-        break;
-      }
-      devanagariPhrases.push(devanagariPhrase);
-    } else {
-      errorText = 'Error parsing: ' + p;
+    const outPhrase = parsed.to(script);
+    if (!outPhrase) {
+      errorText = 'Error transcribing: ' + p;
       break;
     }
+    outPhrases.push(outPhrase);
   }
   if (errorText) {
-    document.getElementById('devanagari').innerText = errorText;
+    el.innerText = errorText;
   } else {
-    document.getElementById('devanagari').innerText =
-        'Devanagari: ' + devanagariPhrases.join(' ');
-  }
-}
-
-function parseBurmese() {
-  let paliText = document.getElementById('pali').value;
-  let burmesePhrases = [];
-  let phrases = paliText.split(' ');
-  let errorText = '';
-  for (const p of phrases) {
-    if (!p) {
-      continue;
-    }
-    let parsed = new PaliString(p);
-    if (parsed.isValid) {
-      const burmesePhrase = parsed.toBurmese();
-      if (!burmesePhrase) {
-        errorText = 'Error transcribing: ' + p;
-        break;
-      }
-      burmesePhrases.push(burmesePhrase);
-    } else {
-      errorText = 'Error parsing: ' + p;
-      break;
-    }
-  }
-  if (errorText) {
-    document.getElementById('burmese').innerText = errorText;
-  } else {
-    document.getElementById('burmese').innerText =
-        'Burmese: ' + burmesePhrases.join(' ');
+    el.innerText = script + ': ' + outPhrases.join(' ');
   }
 }
 
 function splitAndParse() {
-  parseThai();
-  parseDevanagari();
-  parseBurmese();
+  const text = document.getElementById('pali').value;
+  transliterate(text, SCRIPT_THAI, document.getElementById('thai'));
+  transliterate(text, SCRIPT_DEVANAGARI, document.getElementById('devanagari'));
+  transliterate(text, SCRIPT_BURMESE, document.getElementById('burmese'));
 }
 
 document.getElementById('transliterate').onclick = splitAndParse;

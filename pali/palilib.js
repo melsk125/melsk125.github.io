@@ -77,6 +77,10 @@ const LONE_VOWEL_BURMESE = new Map([
 const BURMESE_CONSONANT_COMBINER = '္';  
 const BURMESE_ANUSVARA = 'ံ';
 
+export const SCRIPT_THAI = 'THAI';
+export const SCRIPT_BURMESE = 'BURMESE';
+export const SCRIPT_DEVANAGARI = 'DEVANAGARI';
+
 class PaliSyllable {
   constructor(consonantOne, consonantTwo, vowel, isNigahita) {
     this.consonantOne_ = consonantOne;
@@ -102,7 +106,7 @@ class PaliSyllable {
   }
 
   toThai() {
-    let thai = '';
+    let dest = '';
     let vowel = TO_THAI.get(this.vowel_);
     if (vowel === undefined) {
       console.error('TransliterationError: invalid vowel: ', this.vowel_);
@@ -110,11 +114,11 @@ class PaliSyllable {
     }
     let isFront = THAI_FRONT_VOWELS.includes(this.vowel_);
     if (isFront && !this.consonantTwo_) {
-      thai += vowel;
+      dest += vowel;
     }
     if (!this.consonantOne_) {
-      thai += THAI_NULL_CONSONANT;
-      if (thai.consonantTwo_) {
+      dest += THAI_NULL_CONSONANT;
+      if (this.consonantTwo_) {
         console.error('TransliterationError: no consonantOne but has ' +
         'consonantTwo');
         return '';
@@ -126,12 +130,12 @@ class PaliSyllable {
         this.consonantOne_);
         return '';
       }
-      thai += consonantOne;
+      dest += consonantOne;
     }
     if (this.consonantTwo_) {
-      thai += THAI_PINTHU;
+      dest += THAI_PINTHU;
       if (isFront) {
-        thai += vowel;
+        dest += vowel;
       }
       let consonantTwo = TO_THAI.get(this.consonantTwo_);
       if (!consonantTwo) {
@@ -139,19 +143,19 @@ class PaliSyllable {
         this.consonantTwo_);
         return '';
       }
-      thai += consonantTwo;
+      dest += consonantTwo;
     }
     if (!isFront) {
-      thai += vowel;
+      dest += vowel;
     }
     if (this.isNigahita_) {
-      thai += THAI_NIGAHITA;
+      dest += THAI_NIGAHITA;
     }
-    return thai;
+    return dest;
   }
 
   toDevanagari() {
-    let devanagari = '';
+    let dest = '';
     if (!this.consonantOne_) {
       if (this.consonantTwo_) {
         console.error('TransliterationError: no consonantOne but has ' +
@@ -163,7 +167,7 @@ class PaliSyllable {
         console.error('TransliterationError: invalid vowel: ', this.vowel_);
         return '';
       }
-      devanagari += vowel;
+      dest += vowel;
     } else {
       let consonantOne = CONSONANT_TO_DEVANAGARI.get(this.consonantOne_);
       if (!consonantOne) {
@@ -171,32 +175,32 @@ class PaliSyllable {
         this.consonantOne_);
         return '';
       }
-      devanagari += consonantOne;
+      dest += consonantOne;
       if (this.consonantTwo_) {
-        devanagari += DEVANAGARI_VIRAMA;
+        dest += DEVANAGARI_VIRAMA;
         let consonantTwo = CONSONANT_TO_DEVANAGARI.get(this.consonantTwo_);
         if (!consonantTwo) {
           console.error('TransliterationError: invalid consonantTwo: ',
           this.consonantTwo_);
           return '';
         }
-        devanagari += consonantTwo;
+        dest += consonantTwo;
       }
       const vowel = COMBINED_VOWEL_DEVANAGARI.get(this.vowel_);
       if (vowel === undefined) {
         console.error('TransliterationError: invalid vowel: ', this.vowel_);
         return '';
       }
-      devanagari += vowel;
+      dest += vowel;
     }
     if (this.isNigahita_) {
-      devanagari += DEVANAGARI_ANUSVARA;
+      dest += DEVANAGARI_ANUSVARA;
     }
-    return devanagari;
+    return dest;
   }
 
   toBurmese() {
-    let burmese = '';
+    let dest = '';
     if (!this.consonantOne_) {
       if (this.consonantTwo_) {
         console.error('TransliterationError: no consonantOne but has ' +
@@ -208,7 +212,7 @@ class PaliSyllable {
         console.error('TransliterationError: invalid vowel: ', this.vowel_);
         return '';
       }
-      burmese += vowel;
+      dest += vowel;
     } else {
       let consonantOne = CONSONANT_TO_BURMESE.get(this.consonantOne_);
       if (!consonantOne) {
@@ -216,28 +220,28 @@ class PaliSyllable {
         this.consonantOne_);
         return '';
       }
-      burmese += consonantOne;
+      dest += consonantOne;
       if (this.consonantTwo_) {
-        burmese += BURMESE_CONSONANT_COMBINER;
+        dest += BURMESE_CONSONANT_COMBINER;
         let consonantTwo = CONSONANT_TO_BURMESE.get(this.consonantTwo_);
         if (!consonantTwo) {
           console.error('TransliterationError: invalid consonantTwo: ',
           this.consonantTwo_);
           return '';
         }
-        burmese += consonantTwo;
+        dest += consonantTwo;
       }
       const vowel = COMBINED_VOWEL_BURMESE.get(this.vowel_);
       if (vowel === undefined) {
         console.error('TransliterationError: invalid vowel: ', this.vowel_);
         return '';
       }
-      burmese += vowel;
+      dest += vowel;
     }
     if (this.isNigahita_) {
-      burmese += BURMESE_ANUSVARA;
+      dest += BURMESE_ANUSVARA;
     }
-    return burmese;
+    return dest;
   }
 }
 
@@ -335,9 +339,9 @@ export class PaliString {
       console.error('TransliterationError: invalid text');
       return '';
     }
-    let thai = '';
-    this.syllables.forEach(syl => thai += syl.toThai());
-    return thai;
+    let dest = '';
+    this.syllables.forEach(syl => dest += syl.toThai());
+    return dest;
   }
 
   toDevanagari() {
@@ -345,9 +349,9 @@ export class PaliString {
       console.error('TransliterationError: invalid text');
       return '';
     }
-    let devanagari = '';
-    this.syllables.forEach(syl => devanagari += syl.toDevanagari());
-    return devanagari;
+    let dest = '';
+    this.syllables.forEach(syl => dest += syl.toDevanagari());
+    return dest;
   }
 
   toBurmese() {
@@ -355,8 +359,21 @@ export class PaliString {
       console.error('TransliterationError: invalid text');
       return '';
     }
-    let burmese = '';
-    this.syllables.forEach(syl => burmese += syl.toBurmese());
-    return burmese;
+    let dest = '';
+    this.syllables.forEach(syl => dest += syl.toBurmese());
+    return dest;
+  }
+
+  to(script) {
+    switch (script) {
+      case SCRIPT_THAI:
+        return this.toThai();
+      case SCRIPT_DEVANAGARI:
+        return this.toDevanagari();
+      case SCRIPT_BURMESE:
+        return this.toBurmese();
+      default:
+        return '';
+    }
   }
 }
