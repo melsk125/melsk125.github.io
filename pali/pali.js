@@ -59,9 +59,40 @@ function parseDevanagari() {
   }
 }
 
+function parseBurmese() {
+  let paliText = document.getElementById('pali').value;
+  let burmesePhrases = [];
+  let phrases = paliText.split(' ');
+  let errorText = '';
+  for (const p of phrases) {
+    if (!p) {
+      continue;
+    }
+    let parsed = new PaliString(p);
+    if (parsed.isValid) {
+      const burmesePhrase = parsed.toBurmese();
+      if (!burmesePhrase) {
+        errorText = 'Error transcribing: ' + p;
+        break;
+      }
+      burmesePhrases.push(burmesePhrase);
+    } else {
+      errorText = 'Error parsing: ' + p;
+      break;
+    }
+  }
+  if (errorText) {
+    document.getElementById('burmese').innerText = errorText;
+  } else {
+    document.getElementById('burmese').innerText =
+        'Burmese: ' + burmesePhrases.join(' ');
+  }
+}
+
 function splitAndParse() {
   parseThai();
   parseDevanagari();
+  parseBurmese();
 }
 
 document.getElementById('transliterate').onclick = splitAndParse;

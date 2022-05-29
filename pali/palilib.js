@@ -46,18 +46,36 @@ const CONSONANT_TO_DEVANAGARI = new Map([
   ['y', 'य'], ['r', 'र'], ['l', 'ल'], ['ḷ', 'ळ'], ['v', 'व'],
   ['s', 'स'], ['h', 'ह']
 ]);
-
 const COMBINED_VOWEL_DEVANAGARI = new Map([
   ['a', ''], ['ā', 'ा'], ['i', 'ि'], ['ī', 'ी'], ['u', 'ु'], ['ū', 'ू'],
   ['e', 'े'], ['o', 'ो']
 ]);
-
 const LONE_VOWEL_DEVANAGARI = new Map([
   ['a', 'अ'], ['ā', 'आ'], ['i', 'इ'], ['ī', 'ई'], ['u', 'उ'], ['ū', 'ऊ'],
   ['e', 'ए'], ['o', 'ओ']
 ]);
 const DEVANAGARI_VIRAMA = '्';
 const DEVANAGARI_ANUSVARA = 'ं';
+
+const CONSONANT_TO_BURMESE = new Map([
+  ['k', 'က'], ['kh', 'ခ'], ['g', 'ဂ'], ['gh', 'ဃ'], ['ṅ', 'င'],
+  ['c', 'စ'], ['ch', 'ဆ'], ['j', 'ဇ'], ['jh', 'ဈ'], ['ñ', 'ည'],
+  ['ṭ', 'ဋ'], ['ṭh', 'ဌ'], ['ḍ', 'ဍ'], ['ḍh', 'ဎ'], ['ṇ', 'ဏ'],
+  ['t', 'တ'], ['th', 'ထ'], ['d', 'ဒ'], ['dh', 'ဓ'], ['n', 'န'],
+  ['p', 'ပ'], ['ph', 'ဖ'], ['b', 'ဗ'], ['bh', 'ဘ'], ['m', 'မ'],
+  ['y', 'ယ'], ['r', 'ရ'], ['l', 'လ'], ['ḷ', 'ဠ'], ['v', 'ဝ'],
+  ['s', 'သ'], ['h', 'ဟ']
+]);
+const COMBINED_VOWEL_BURMESE = new Map([
+  ['a', ''], ['ā', 'ာ'], ['i', 'ိ'], ['ī', 'ီ'], ['u', 'ု'], ['ū', 'ူ'],
+  ['e', 'ေ'], ['o', 'ော']
+]);
+const LONE_VOWEL_BURMESE = new Map([
+  ['a', 'အ'], ['ā', 'အာ'], ['i', 'ဣ'], ['ī', 'ဤ'], ['u', 'ဥ'], ['ū', 'ဦ'],
+  ['e', 'ဧ'], ['o', 'ဩ']
+]);
+const BURMESE_CONSONANT_COMBINER = '္';  
+const BURMESE_ANUSVARA = 'ံ';
 
 class PaliSyllable {
   constructor(consonantOne, consonantTwo, vowel, isNigahita) {
@@ -176,6 +194,51 @@ class PaliSyllable {
     }
     return devanagari;
   }
+
+  toBurmese() {
+    let burmese = '';
+    if (!this.consonantOne_) {
+      if (this.consonantTwo_) {
+        console.error('TransliterationError: no consonantOne but has ' +
+        'consonantTwo');
+        return '';
+      }
+      const vowel = LONE_VOWEL_BURMESE.get(this.vowel_);
+      if (!vowel) {
+        console.error('TransliterationError: invalid vowel: ', this.vowel_);
+        return '';
+      }
+      burmese += vowel;
+    } else {
+      let consonantOne = CONSONANT_TO_BURMESE.get(this.consonantOne_);
+      if (!consonantOne) {
+        console.error('TransliterationError: invalid consonantOne: ',
+        this.consonantOne_);
+        return '';
+      }
+      burmese += consonantOne;
+      if (this.consonantTwo_) {
+        burmese += BURMESE_CONSONANT_COMBINER;
+        let consonantTwo = CONSONANT_TO_BURMESE.get(this.consonantTwo_);
+        if (!consonantTwo) {
+          console.error('TransliterationError: invalid consonantTwo: ',
+          this.consonantTwo_);
+          return '';
+        }
+        burmese += consonantTwo;
+      }
+      const vowel = COMBINED_VOWEL_BURMESE.get(this.vowel_);
+      if (vowel === undefined) {
+        console.error('TransliterationError: invalid vowel: ', this.vowel_);
+        return '';
+      }
+      burmese += vowel;
+    }
+    if (this.isNigahita_) {
+      burmese += BURMESE_ANUSVARA;
+    }
+    return burmese;
+  }
 }
 
 export class PaliString {
@@ -285,5 +348,15 @@ export class PaliString {
     let devanagari = '';
     this.syllables.forEach(syl => devanagari += syl.toDevanagari());
     return devanagari;
+  }
+
+  toBurmese() {
+    if (!this.isValid) {
+      console.error('TransliterationError: invalid text');
+      return '';
+    }
+    let burmese = '';
+    this.syllables.forEach(syl => burmese += syl.toBurmese());
+    return burmese;
   }
 }
