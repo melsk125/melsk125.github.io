@@ -1,0 +1,22 @@
+body {
+  font-family: 'Sarabun', sans-serif;
+  font-size: 24px;
+}
+
+input {
+  font-family: 'Sarabun', sans-serif;
+  font-size: 24px;
+}
+
+button {
+  font-family: 'Sarabun', sans-serif;
+  font-size: 24px;
+}
+
+#pali {
+  width: 800px;
+}
+
+div {
+  margin: 20px 0;
+}
