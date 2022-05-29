@@ -29,13 +29,35 @@ const TO_THAI = new Map([
   ['s', 'ส'], ['h', 'ห'],
   ['a', ''], ['ā', 'า'], ['i', 'ิ'], ['ī', 'ี'], ['u', 'ุ'], ['ū', 'ู'],
   ['e', 'เ'], ['o', 'โ']
-])
+]);
 const THAI_FRONT_VOWELS = [
   'e', 'o'
-]
+];
 const THAI_NULL_CONSONANT = 'อ';
 const THAI_PINTHU = 'ฺ';
 const THAI_NIGAHITA = 'ํ';
+
+const CONSONANT_TO_DEVANAGARI = new Map([
+  ['k', 'क'], ['kh', 'ख'], ['g', 'ग'], ['gh', 'घ'], ['ṅ', 'ङ'],
+  ['c', 'च'], ['ch', 'छ'], ['j', 'ज'], ['jh', 'झ'], ['ñ', 'ञ'],
+  ['ṭ', 'ट'], ['ṭh', 'ठ'], ['ḍ', 'ड'], ['ḍh', 'ढ'], ['ṇ', 'ण'],
+  ['t', 'त'], ['th', 'थ'], ['d', 'द'], ['dh', 'ध'], ['n', 'न'],
+  ['p', 'प'], ['ph', 'फ'], ['b', 'ब'], ['bh', 'भ'], ['m', 'म'],
+  ['y', 'य'], ['r', 'र'], ['l', 'ल'], ['ḷ', 'ळ'], ['v', 'व'],
+  ['s', 'स'], ['h', 'ह']
+]);
+
+const COMBINED_VOWEL_DEVANAGARI = new Map([
+  ['a', ''], ['ā', 'ा'], ['i', 'ि'], ['ī', 'ी'], ['u', 'ु'], ['ū', 'ू'],
+  ['e', 'े'], ['o', 'ो']
+]);
+
+const LONE_VOWEL_DEVANAGARI = new Map([
+  ['a', 'अ'], ['ā', 'आ'], ['i', 'इ'], ['ī', 'ई'], ['u', 'उ'], ['ū', 'ऊ'],
+  ['e', 'ए'], ['o', 'ओ']
+]);
+const DEVANAGARI_VIRAMA = '्';
+const DEVANAGARI_ANUSVARA = 'ं';
 
 class PaliSyllable {
   constructor(consonantOne, consonantTwo, vowel, isNigahita) {
@@ -108,6 +130,51 @@ class PaliSyllable {
       thai += THAI_NIGAHITA;
     }
     return thai;
+  }
+
+  toDevanagari() {
+    let devanagari = '';
+    if (!this.consonantOne_) {
+      if (this.consonantTwo_) {
+        console.error('TransliterationError: no consonantOne but has ' +
+        'consonantTwo');
+        return '';
+      }
+      const vowel = LONE_VOWEL_DEVANAGARI.get(this.vowel_);
+      if (!vowel) {
+        console.error('TransliterationError: invalid vowel: ', this.vowel_);
+        return '';
+      }
+      devanagari += vowel;
+    } else {
+      let consonantOne = CONSONANT_TO_DEVANAGARI.get(this.consonantOne_);
+      if (!consonantOne) {
+        console.error('TransliterationError: invalid consonantOne: ',
+        this.consonantOne_);
+        return '';
+      }
+      devanagari += consonantOne;
+      if (this.consonantTwo_) {
+        devanagari += DEVANAGARI_VIRAMA;
+        let consonantTwo = CONSONANT_TO_DEVANAGARI.get(this.consonantTwo_);
+        if (!consonantTwo) {
+          console.error('TransliterationError: invalid consonantTwo: ',
+          this.consonantTwo_);
+          return '';
+        }
+        devanagari += consonantTwo;
+      }
+      const vowel = COMBINED_VOWEL_DEVANAGARI.get(this.vowel_);
+      if (vowel === undefined) {
+        console.error('TransliterationError: invalid vowel: ', this.vowel_);
+        return '';
+      }
+      devanagari += vowel;
+    }
+    if (this.isNigahita_) {
+      devanagari += DEVANAGARI_ANUSVARA;
+    }
+    return devanagari;
   }
 }
 
@@ -208,5 +275,15 @@ export class PaliString {
     let thai = '';
     this.syllables.forEach(syl => thai += syl.toThai());
     return thai;
+  }
+
+  toDevanagari() {
+    if (!this.isValid) {
+      console.error('TransliterationError: invalid text');
+      return '';
+    }
+    let devanagari = '';
+    this.syllables.forEach(syl => devanagari += syl.toDevanagari());
+    return devanagari;
   }
 }
