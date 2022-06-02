@@ -66,10 +66,16 @@ const CONSONANT_TO_BURMESE = new Map([
   ['y', 'ယ'], ['r', 'ရ'], ['l', 'လ'], ['ḷ', 'ဠ'], ['v', 'ဝ'],
   ['s', 'သ'], ['h', 'ဟ']
 ]);
+const CONSONANTS_TALL_AA = ['ခ','ဂ','င','ဒ','ပ','ဝ'];
+const TALL_AA = 'ါ';
+const NEED_SPECIAL_NASALIZED_NG_COMBINER = ['က','ခ','ဂ','ဃ'];
+const SPECIAL_NASALIZED_NG_COMBINER = '်';
 const COMBINED_VOWEL_BURMESE = new Map([
   ['a', ''], ['ā', 'ာ'], ['i', 'ိ'], ['ī', 'ီ'], ['u', 'ု'], ['ū', 'ူ'],
   ['e', 'ေ'], ['o', 'ော']
 ]);
+const NEED_COMBINED_V_SYMBOL = ['a', 'ā', 'e'];
+const COMBINED_V_SYMBOL = 'ွ';
 const LONE_VOWEL_BURMESE = new Map([
   ['a', 'အ'], ['ā', 'အာ'], ['i', 'ဣ'], ['ī', 'ဤ'], ['u', 'ဥ'], ['ū', 'ဦ'],
   ['e', 'ဧ'], ['o', 'ဩ']
@@ -215,6 +221,7 @@ class PaliSyllable {
       dest += vowel;
     } else {
       let consonantOne = CONSONANT_TO_BURMESE.get(this.consonantOne_);
+      let mainConsonant = consonantOne;
       if (!consonantOne) {
         console.error('TransliterationError: invalid consonantOne: ',
         this.consonantOne_);
@@ -222,19 +229,39 @@ class PaliSyllable {
       }
       dest += consonantOne;
       if (this.consonantTwo_) {
-        dest += BURMESE_CONSONANT_COMBINER;
         let consonantTwo = CONSONANT_TO_BURMESE.get(this.consonantTwo_);
         if (!consonantTwo) {
           console.error('TransliterationError: invalid consonantTwo: ',
           this.consonantTwo_);
           return '';
         }
+        mainConsonant = consonantTwo;
+        // Special case for v
+        let combinedV = false;
+        if (this.consonantTwo_ == 'v' &&
+            NEED_COMBINED_V_SYMBOL.includes(this.vowel_)) {
+          consonantTwo = COMBINED_V_SYMBOL;
+          mainConsonant = consonantOne;
+          combinedV = true;
+        }
+        // Special case for nasalised ṅ.
+        if (this.consonantOne_ == 'ṅ' &&
+            NEED_SPECIAL_NASALIZED_NG_COMBINER.includes(consonantTwo)) {
+          dest += SPECIAL_NASALIZED_NG_COMBINER;
+        }
+        dest += (combinedV ? '' : BURMESE_CONSONANT_COMBINER);
         dest += consonantTwo;
       }
-      const vowel = COMBINED_VOWEL_BURMESE.get(this.vowel_);
+      let vowel = COMBINED_VOWEL_BURMESE.get(this.vowel_);
       if (vowel === undefined) {
         console.error('TransliterationError: invalid vowel: ', this.vowel_);
         return '';
+      }
+      // Special case for tall ā
+      console.log('tall aa?');
+      if (this.vowel_ == 'ā' && CONSONANTS_TALL_AA.includes(mainConsonant)) {
+        vowel = TALL_AA;
+        console.log('tall aa');
       }
       dest += vowel;
     }
