@@ -83,9 +83,30 @@ const LONE_VOWEL_BURMESE = new Map([
 const BURMESE_CONSONANT_COMBINER = '္';  
 const BURMESE_ANUSVARA = 'ံ';
 
+const CONSONANT_TO_SINHALA = new Map([
+  ['k', 'ක'], ['kh', 'ඛ'], ['g', 'ග'], ['gh', 'ඝ'], ['ṅ', 'ඞ'],
+  ['c', 'ච'], ['ch', 'ඡ'], ['j', 'ජ'], ['jh', 'ඣ'], ['ñ', 'ඤ'],
+  ['ṭ', 'ට'], ['ṭh', 'ඨ'], ['ḍ', 'ඩ'], ['ḍh', 'ඪ'], ['ṇ', 'ණ'],
+  ['t', 'ත'], ['th', 'ථ'], ['d', 'ද'], ['dh', 'ධ'], ['n', 'න'],
+  ['p', 'ප'], ['ph', 'ඵ'], ['b', 'බ'], ['bh', 'භ'], ['m', 'ම'],
+  ['y', 'ය'], ['r', 'ර'], ['l', 'ල'], ['ḷ', 'ළ'], ['v', 'ව'],
+  ['s', 'ස'], ['h', 'හ']
+]);
+const COMBINED_VOWEL_SINHALA = new Map([
+  ['a', ''], ['ā', 'ැ'], ['i', 'ි'], ['ī', 'ී'], ['u', 'ු'], ['ū', 'ූ'],
+  ['e', 'ෙ'], ['o', 'ො']
+]);
+const LONE_VOWEL_SINHALA = new Map([
+  ['a', 'අ'], ['ā', 'ආ'], ['i', 'ඉ'], ['ī', 'ඊ'], ['u', 'උ'], ['ū', 'ඌ'],
+  ['e', 'එ'], ['o', 'ඔ']
+]);
+const SINHALA_CONSONANT_COMBINER = '\u0dca\u200d';
+const SINHALA_NIGAHITA = 'ං';
+
 export const SCRIPT_THAI = 'THAI';
 export const SCRIPT_BURMESE = 'BURMESE';
 export const SCRIPT_DEVANAGARI = 'DEVANAGARI';
+export const SCRIPT_SINHALA = 'SINHALA';
 
 class PaliSyllable {
   constructor(consonantOne, consonantTwo, vowel, isNigahita) {
@@ -258,15 +279,58 @@ class PaliSyllable {
         return '';
       }
       // Special case for tall ā
-      console.log('tall aa?');
       if (this.vowel_ == 'ā' && CONSONANTS_TALL_AA.includes(mainConsonant)) {
         vowel = TALL_AA;
-        console.log('tall aa');
       }
       dest += vowel;
     }
     if (this.isNigahita_) {
       dest += BURMESE_ANUSVARA;
+    }
+    return dest;
+  }
+
+  toSinhala() {
+    let dest = '';
+    if (!this.consonantOne_) {
+      if (this.consonantTwo_) {
+        console.error('TransliterationError: no consonantOne but has ' +
+        'consonantTwo');
+        return '';
+      }
+      const vowel = LONE_VOWEL_SINHALA.get(this.vowel_);
+      if (!vowel) {
+        console.error('TransliterationError: invalid vowel: ', this.vowel_);
+        return '';
+      }
+      dest += vowel;
+    } else {
+      let consonantOne = CONSONANT_TO_SINHALA.get(this.consonantOne_);
+      if (!consonantOne) {
+        console.error('TransliterationError: invalid consonantOne: ',
+        this.consonantOne_);
+        return '';
+      }
+      dest += consonantOne;
+      if (this.consonantTwo_) {
+        dest += SINHALA_CONSONANT_COMBINER;
+        let consonantTwo = CONSONANT_TO_SINHALA.get(this.consonantTwo_);
+        if (!consonantTwo) {
+          console.error('TransliterationError: invalid consonantTwo: ',
+          this.consonantTwo_);
+          return '';
+        }
+        dest += consonantTwo;
+      }
+      const vowel = COMBINED_VOWEL_SINHALA.get(this.vowel_);
+      if (vowel === undefined) {
+        console.error('TransliterationError: invalid vowel: ', this.vowel_);
+        return '';
+      }
+      dest += vowel;
+    }
+    if (this.isNigahita_) {
+      dest += SINHALA_NIGAHITA;
     }
     return dest;
   }
@@ -391,6 +455,16 @@ export class PaliString {
     return dest;
   }
 
+  toSinhala() {
+    if (!this.isValid) {
+      console.error('TransliterationError: invalid text');
+      return '';
+    }
+    let dest = '';
+    this.syllables.forEach(syl => dest += syl.toSinhala());
+    return dest;
+  }
+
   to(script) {
     switch (script) {
       case SCRIPT_THAI:
@@ -399,6 +473,8 @@ export class PaliString {
         return this.toDevanagari();
       case SCRIPT_BURMESE:
         return this.toBurmese();
+      case SCRIPT_SINHALA:
+        return this.toSinhala();
       default:
         return '';
     }

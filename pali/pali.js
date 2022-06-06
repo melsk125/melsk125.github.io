@@ -1,4 +1,4 @@
-import { PaliString, SCRIPT_THAI, SCRIPT_DEVANAGARI, SCRIPT_BURMESE } from './palilib.js';
+import { PaliString, SCRIPT_THAI, SCRIPT_DEVANAGARI, SCRIPT_BURMESE, SCRIPT_SINHALA } from './palilib.js';
 
 function transliterate(text, script, el) {
   const outPhrases = [];
@@ -32,6 +32,7 @@ function splitAndParse() {
   transliterate(text, SCRIPT_THAI, document.getElementById('thai'));
   transliterate(text, SCRIPT_DEVANAGARI, document.getElementById('devanagari'));
   transliterate(text, SCRIPT_BURMESE, document.getElementById('burmese'));
+  transliterate(text, SCRIPT_SINHALA, document.getElementById('sinhala'));
 }
 
 document.getElementById('transliterate').onclick = splitAndParse;
