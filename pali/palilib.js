@@ -93,7 +93,7 @@ const CONSONANT_TO_SINHALA = new Map([
   ['s', 'ස'], ['h', 'හ']
 ]);
 const COMBINED_VOWEL_SINHALA = new Map([
-  ['a', ''], ['ā', 'ැ'], ['i', 'ි'], ['ī', 'ී'], ['u', 'ු'], ['ū', 'ූ'],
+  ['a', ''], ['ā', 'ා'], ['i', 'ි'], ['ī', 'ී'], ['u', 'ු'], ['ū', 'ූ'],
   ['e', 'ෙ'], ['o', 'ො']
 ]);
 const LONE_VOWEL_SINHALA = new Map([
